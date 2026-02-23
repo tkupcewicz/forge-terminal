@@ -215,8 +215,17 @@ pub fn make_lua_context(config_file: &Path) -> anyhow::Result<Lua> {
 
     {
         let globals = lua.globals();
-        // This table will be the `wezterm` module in the script
+        // This table will be the `wezterm` module in the script.
+        // Register under both "forge" and "wezterm" (backwards compat) so that
+        // `local forge = require("forge")` and `local wezterm = require("wezterm")`
+        // both work and return the same module table.
         let wezterm_mod = get_or_create_module(&lua, "wezterm")?;
+        // Also register as "forge" — they share the same table
+        {
+            let package: Table = globals.get("package").context("get _G.package for forge alias")?;
+            let loaded: Table = package.get("loaded").context("get package.loaded for forge alias")?;
+            loaded.set("forge", wezterm_mod.clone()).context("set package.loaded.forge")?;
+        }
 
         let package: Table = globals.get("package").context("get _G.package")?;
         let package_path: String = package.get("path").context("get package.path as String")?;
@@ -227,7 +236,8 @@ pub fn make_lua_context(config_file: &Path) -> anyhow::Result<Lua> {
             array.insert(1, format!("{}/?/init.lua", path.display()));
         }
 
-        prefix_path(&mut path_array, &crate::HOME_DIR.join(".wezterm"));
+        prefix_path(&mut path_array, &crate::HOME_DIR.join(".forge"));
+        prefix_path(&mut path_array, &crate::HOME_DIR.join(".wezterm"));  // backwards compat
         for dir in crate::CONFIG_DIRS.iter() {
             prefix_path(&mut path_array, dir);
         }

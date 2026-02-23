@@ -1006,9 +1006,13 @@ impl Config {
         // multiple.  In addition, it spawns a lot of subprocesses,
         // so we do this bit "by-hand"
 
-        let mut paths = vec![PathPossibility::optional(HOME_DIR.join(".wezterm.lua"))];
+        let mut paths = vec![
+            PathPossibility::optional(HOME_DIR.join(".forge.lua")),
+            PathPossibility::optional(HOME_DIR.join(".wezterm.lua")),  // backwards compat
+        ];
         for dir in CONFIG_DIRS.iter() {
-            paths.push(PathPossibility::optional(dir.join("wezterm.lua")))
+            paths.push(PathPossibility::optional(dir.join("forge.lua")));
+            paths.push(PathPossibility::optional(dir.join("wezterm.lua")));  // backwards compat
         }
 
         if cfg!(windows) {
@@ -1022,12 +1026,16 @@ impl Config {
             // dir as the executable that will take precedence.
             if let Ok(exe_name) = std::env::current_exe() {
                 if let Some(exe_dir) = exe_name.parent() {
-                    paths.insert(0, PathPossibility::optional(exe_dir.join("wezterm.lua")));
+                    paths.insert(0, PathPossibility::optional(exe_dir.join("forge.lua")));
+                    paths.insert(1, PathPossibility::optional(exe_dir.join("wezterm.lua")));  // backwards compat
                 }
             }
         }
-        if let Some(path) = std::env::var_os("WEZTERM_CONFIG_FILE") {
-            log::trace!("Note: WEZTERM_CONFIG_FILE is set in the environment");
+        // Check FORGE env vars first, then WEZTERM for compat
+        if let Some(path) = std::env::var_os("FORGE_CONFIG_FILE")
+            .or_else(|| std::env::var_os("WEZTERM_CONFIG_FILE"))
+        {
+            log::trace!("Note: FORGE_CONFIG_FILE or WEZTERM_CONFIG_FILE is set in the environment");
             paths.insert(0, PathPossibility::required(path.into()));
         }
 
@@ -1055,11 +1063,13 @@ impl Config {
             }
         }
 
-        // We didn't find (or were asked to skip) a wezterm.lua file, so
+        // We didn't find (or were asked to skip) a config file, so
         // update the environment to make it simpler to understand this
         // state.
-        std::env::remove_var("WEZTERM_CONFIG_FILE");
-        std::env::remove_var("WEZTERM_CONFIG_DIR");
+        std::env::remove_var("FORGE_CONFIG_FILE");
+        std::env::remove_var("FORGE_CONFIG_DIR");
+        std::env::remove_var("WEZTERM_CONFIG_FILE");  // backwards compat
+        std::env::remove_var("WEZTERM_CONFIG_DIR");  // backwards compat
 
         match Self::try_default() {
             Err(err) => LoadedConfig {
@@ -1130,9 +1140,11 @@ impl Config {
                 // problems earlier than we use them.
                 let _ = cfg.key_bindings();
 
-                std::env::set_var("WEZTERM_CONFIG_FILE", p);
+                std::env::set_var("FORGE_CONFIG_FILE", p);
+                std::env::set_var("WEZTERM_CONFIG_FILE", p);  // backwards compat
                 if let Some(dir) = p.parent() {
-                    std::env::set_var("WEZTERM_CONFIG_DIR", dir);
+                    std::env::set_var("FORGE_CONFIG_DIR", dir);
+                    std::env::set_var("WEZTERM_CONFIG_DIR", dir);  // backwards compat
                 }
                 Ok(cfg)
             });
@@ -1599,7 +1611,7 @@ impl Config {
         cmd.env("COLORTERM", "truecolor");
         // TERM_PROGRAM and TERM_PROGRAM_VERSION are an emerging
         // de-facto standard for identifying the terminal.
-        cmd.env("TERM_PROGRAM", "WezTerm");
+        cmd.env("TERM_PROGRAM", "Forge");
         cmd.env("TERM_PROGRAM_VERSION", crate::wezterm_version());
     }
 }
