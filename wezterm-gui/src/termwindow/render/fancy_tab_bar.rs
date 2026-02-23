@@ -7,6 +7,7 @@ use crate::termwindow::render::window_buttons::window_button_element;
 use crate::termwindow::{UIItem, UIItemType};
 use crate::utilsprites::RenderMetrics;
 use config::{Dimension, DimensionContext, TabBarColors};
+use mux::Mux;
 use std::rc::Rc;
 use wezterm_font::LoadedFont;
 use wezterm_term::color::{ColorAttribute, ColorPalette};
@@ -355,6 +356,49 @@ impl crate::TermWindow {
                 }
                 _ => left_eles.push(item_to_elem(item)),
             }
+        }
+
+        // Add Claude session info to the right side of the tab bar
+        let claude_info = {
+            let mux = Mux::get();
+            mux.get_active_tab_for_window(self.mux_window_id)
+                .and_then(|tab| tab.get_active_pane())
+                .and_then(|pane| pane.claude_session_info())
+        };
+
+        if let Some(info) = claude_info {
+            let model_text = info.model.as_deref().unwrap_or("?");
+            let cost_text = match info.cost_cents {
+                Some(c) => format!("${}.{:02}", c / 100, c % 100),
+                None => "$?".to_string(),
+            };
+            let status_char = if info.connected { "\u{25cf}" } else { "\u{25cb}" };
+
+            let status_text = format!(" [{}] \u{2502} {} \u{2502} {} ", model_text, cost_text, status_char);
+
+            let claude_element = Element::new(&font, ElementContent::Text(status_text))
+                .item_type(UIItemType::TabBar(TabBarItem::None))
+                .line_height(Some(1.75))
+                .margin(BoxDimension {
+                    left: Dimension::Cells(0.),
+                    right: Dimension::Cells(0.),
+                    top: Dimension::Cells(0.0),
+                    bottom: Dimension::Cells(0.),
+                })
+                .padding(BoxDimension {
+                    left: Dimension::Cells(0.5),
+                    right: Dimension::Cells(0.5),
+                    top: Dimension::Cells(0.),
+                    bottom: Dimension::Cells(0.),
+                })
+                .border(BoxDimension::new(Dimension::Pixels(0.)))
+                .colors(ElementColors {
+                    border: BorderColor::default(),
+                    bg: bar_colors.bg.clone(),
+                    text: bar_colors.text.clone(),
+                });
+
+            right_eles.insert(0, claude_element);
         }
 
         let mut children = vec![];

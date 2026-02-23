@@ -1929,6 +1929,7 @@ dependencies = [
  "fastrand",
  "filedescriptor",
  "finl_unicode",
+ "forge-claude",
  "frecency",
  "futures",
  "hdrhistogram",

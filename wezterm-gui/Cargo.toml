@@ -50,6 +50,7 @@ env-bootstrap.workspace = true
 euclid.workspace = true
 fastrand.workspace = true
 filedescriptor.workspace = true
+forge-claude.workspace = true
 finl_unicode.workspace = true
 frecency.workspace = true
 futures.workspace = true
