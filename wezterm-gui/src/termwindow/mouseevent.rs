@@ -43,10 +43,12 @@ impl super::TermWindow {
             | UIItemType::AboveScrollThumb
             | UIItemType::BelowScrollThumb
             | UIItemType::ScrollThumb
-            | UIItemType::Split(_)
-            | UIItemType::SidePanelTab(_)
+            | UIItemType::Split(_) => {}
+            UIItemType::SidePanelTab(_)
             | UIItemType::SidePanelNewButton
-            | UIItemType::SidePanelDragHandle => {}
+            | UIItemType::SidePanelDragHandle => {
+                // Reset to default cursor when leaving side panel items
+            }
         }
     }
 
@@ -57,10 +59,17 @@ impl super::TermWindow {
             | UIItemType::AboveScrollThumb
             | UIItemType::BelowScrollThumb
             | UIItemType::ScrollThumb
-            | UIItemType::Split(_)
-            | UIItemType::SidePanelTab(_)
-            | UIItemType::SidePanelNewButton
-            | UIItemType::SidePanelDragHandle => {}
+            | UIItemType::Split(_) => {}
+            UIItemType::SidePanelDragHandle => {
+                if let Some(window) = self.window.as_ref() {
+                    window.set_cursor(Some(MouseCursor::SizeLeftRight));
+                }
+            }
+            UIItemType::SidePanelTab(_) | UIItemType::SidePanelNewButton => {
+                if let Some(window) = self.window.as_ref() {
+                    window.set_cursor(Some(MouseCursor::Arrow));
+                }
+            }
         }
     }
 
@@ -354,6 +363,9 @@ impl super::TermWindow {
             UIItemType::ScrollThumb => {
                 self.drag_scroll_thumb(item, start_event, event, context);
             }
+            UIItemType::SidePanelDragHandle => {
+                self.drag_side_panel(item, start_event, event, context);
+            }
             _ => {
                 log::error!("drag not implemented for {:?}", item);
             }
@@ -388,10 +400,14 @@ impl super::TermWindow {
             UIItemType::CloseTab(idx) => {
                 self.mouse_event_close_tab(idx, event, context);
             }
-            UIItemType::SidePanelTab(_)
-            | UIItemType::SidePanelNewButton
-            | UIItemType::SidePanelDragHandle => {
-                // Side panel mouse events handled in a later task
+            UIItemType::SidePanelTab(tab_idx) => {
+                self.mouse_event_side_panel_tab(tab_idx, event, context);
+            }
+            UIItemType::SidePanelNewButton => {
+                self.mouse_event_side_panel_new(event, context);
+            }
+            UIItemType::SidePanelDragHandle => {
+                self.mouse_event_side_panel_drag(item, event, context);
             }
         }
     }
@@ -654,6 +670,90 @@ impl super::TermWindow {
         if event.kind == WMEK::Press(MousePress::Left) {
             self.dragging.replace((item, event));
         }
+    }
+
+    fn mouse_event_side_panel_tab(
+        &mut self,
+        tab_idx: usize,
+        event: MouseEvent,
+        context: &dyn WindowOps,
+    ) {
+        match &event.kind {
+            WMEK::Press(MousePress::Left) => {
+                // Switch to the clicked tab
+                let mux = Mux::get();
+                if let Some(mut window) = mux.get_window_mut(self.mux_window_id) {
+                    window.save_and_then_set_active(tab_idx);
+                }
+                self.invalidate_side_panel();
+                context.invalidate();
+            }
+            WMEK::Press(MousePress::Right) => {
+                // Close this tab (if more than one tab exists)
+                let mux = Mux::get();
+                let can_close = mux
+                    .get_window(self.mux_window_id)
+                    .map(|w| w.len() > 1)
+                    .unwrap_or(false);
+                if can_close {
+                    self.close_specific_tab(tab_idx, true);
+                    self.invalidate_side_panel();
+                    context.invalidate();
+                }
+            }
+            _ => {}
+        }
+        context.set_cursor(Some(MouseCursor::Arrow));
+    }
+
+    fn mouse_event_side_panel_new(
+        &mut self,
+        event: MouseEvent,
+        context: &dyn WindowOps,
+    ) {
+        if matches!(&event.kind, WMEK::Press(MousePress::Left)) {
+            // Spawn a new tab (will be overridden to spawn claude in Task 8)
+            self.spawn_tab(&SpawnTabDomain::CurrentPaneDomain);
+            self.invalidate_side_panel();
+            context.invalidate();
+        }
+        context.set_cursor(Some(MouseCursor::Arrow));
+    }
+
+    fn mouse_event_side_panel_drag(
+        &mut self,
+        item: UIItem,
+        event: MouseEvent,
+        context: &dyn WindowOps,
+    ) {
+        context.set_cursor(Some(MouseCursor::SizeLeftRight));
+        if event.kind == WMEK::Press(MousePress::Left) {
+            self.dragging.replace((item, event));
+        }
+    }
+
+    fn drag_side_panel(
+        &mut self,
+        item: UIItem,
+        start_event: MouseEvent,
+        event: MouseEvent,
+        context: &dyn WindowOps,
+    ) {
+        let border = self.get_os_border();
+        let mouse_x = event.coords.x as f32 - border.left.get() as f32;
+        let new_width = mouse_x
+            .max(self.config.side_panel_min_width)
+            .min(self.config.side_panel_max_width);
+        if (new_width - self.side_panel_width).abs() > 1.0 {
+            self.side_panel_width = new_width;
+            self.invalidate_side_panel();
+            if let Some(window) = self.window.clone() {
+                let dims = self.dimensions;
+                self.apply_dimensions(&dims, None, &window);
+            }
+        }
+        context.set_cursor(Some(MouseCursor::SizeLeftRight));
+        self.dragging.replace((item, start_event));
     }
 
     fn mouse_event_terminal(
