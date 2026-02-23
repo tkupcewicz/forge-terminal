@@ -712,9 +712,12 @@ impl super::TermWindow {
         context: &dyn WindowOps,
     ) {
         if matches!(&event.kind, WMEK::Press(MousePress::Left)) {
-            // Spawn a new tab (will be overridden to spawn claude in Task 8)
-            self.spawn_tab(&SpawnTabDomain::CurrentPaneDomain);
-            self.invalidate_side_panel();
+            if self.config.default_project_dir.is_some() {
+                self.spawn_claude_tab();
+            } else {
+                self.spawn_tab(&SpawnTabDomain::CurrentPaneDomain);
+                self.invalidate_side_panel();
+            }
             context.invalidate();
         }
         context.set_cursor(Some(MouseCursor::Arrow));

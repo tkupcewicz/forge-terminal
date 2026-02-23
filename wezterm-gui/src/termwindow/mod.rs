@@ -2664,7 +2664,11 @@ impl TermWindow {
                 }
             }
             SpawnTab(spawn_where) => {
-                self.spawn_tab(spawn_where);
+                if self.show_side_panel && self.config.default_project_dir.is_some() {
+                    self.spawn_claude_tab();
+                } else {
+                    self.spawn_tab(spawn_where);
+                }
             }
             SpawnWindow => {
                 self.spawn_command(&SpawnCommand::default(), SpawnWhere::NewWindow);
