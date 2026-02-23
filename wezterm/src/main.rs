@@ -23,7 +23,7 @@ mod cli;
 
 #[derive(Debug, Parser)]
 #[command(
-    about = "Forge Terminal\nhttps://github.com/nickel-org/forge-terminal",
+    about = "Forge Terminal\nhttps://github.com/tkupcewicz/forge-terminal",
     version = wezterm_version()
 )]
 pub struct Opt {
