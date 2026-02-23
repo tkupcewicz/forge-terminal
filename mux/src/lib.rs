@@ -50,6 +50,7 @@ mod tmux_pty;
 pub mod window;
 
 use crate::activity::Activity;
+use forge_claude::ClaudeSessionTracker;
 
 pub const DEFAULT_WORKSPACE: &str = "default";
 
@@ -146,6 +147,13 @@ fn parse_buffered_data(pane: Weak<dyn Pane>, dead: &Arc<AtomicBool>, mut rx: Fil
     let mut delay = Duration::from_millis(configuration().mux_output_parser_coalesce_delay_ms);
     let mut deadline = None;
 
+    // Create a Claude session tracker for this pane
+    let pane_id = pane.upgrade().map(|p| p.pane_id());
+    let tracker = Arc::new(ClaudeSessionTracker::new());
+    if let Some(id) = pane_id {
+        CLAUDE_TRACKERS.lock().insert(id, Arc::clone(&tracker));
+    }
+
     loop {
         match rx.read(&mut buf) {
             Ok(size) if size == 0 => {
@@ -157,6 +165,11 @@ fn parse_buffered_data(pane: Weak<dyn Pane>, dead: &Arc<AtomicBool>, mut rx: Fil
                 break;
             }
             Ok(size) => {
+                // Feed raw bytes to the Claude session tracker
+                if let Ok(text) = std::str::from_utf8(&buf[0..size]) {
+                    tracker.process_output(text);
+                }
+
                 parser.parse(&buf[0..size], |action| {
                     let mut flush = false;
                     match &action {
@@ -239,6 +252,11 @@ fn parse_buffered_data(pane: Weak<dyn Pane>, dead: &Arc<AtomicBool>, mut rx: Fil
     // display what they displayed.
     if !actions.is_empty() {
         send_actions_to_mux(&pane, &dead, std::mem::take(&mut actions));
+    }
+
+    // Clean up the Claude tracker when the pane dies
+    if let Some(id) = pane_id {
+        CLAUDE_TRACKERS.lock().remove(&id);
     }
 }
 
@@ -365,6 +383,13 @@ fn read_from_pane_pty(
 
 lazy_static::lazy_static! {
     static ref MUX: Mutex<Option<Arc<Mux>>> = Mutex::new(None);
+    static ref CLAUDE_TRACKERS: Mutex<HashMap<PaneId, Arc<ClaudeSessionTracker>>> =
+        Mutex::new(HashMap::new());
+}
+
+/// Returns the Claude session tracker for the given pane, if one exists.
+pub fn get_claude_tracker(pane_id: PaneId) -> Option<Arc<ClaudeSessionTracker>> {
+    CLAUDE_TRACKERS.lock().get(&pane_id).cloned()
 }
 
 pub struct MuxWindowBuilder {

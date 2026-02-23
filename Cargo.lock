@@ -3626,6 +3626,7 @@ dependencies = [
  "fancy-regex",
  "filedescriptor",
  "finl_unicode",
+ "forge-claude",
  "hostname",
  "k9",
  "lazy_static",

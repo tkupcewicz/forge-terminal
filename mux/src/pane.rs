@@ -336,6 +336,11 @@ pub trait Pane: Downcast + Send + Sync {
     fn exit_behavior(&self) -> Option<ExitBehavior> {
         None
     }
+
+    /// Returns Claude Code session info if this pane is running a Claude session.
+    fn claude_session_info(&self) -> Option<forge_claude::ClaudeSessionInfo> {
+        crate::get_claude_tracker(self.pane_id()).map(|t| t.info())
+    }
 }
 impl_downcast!(Pane);
 
