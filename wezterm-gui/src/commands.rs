@@ -1760,6 +1760,46 @@ pub fn derive_command_from_key_assignment(action: &KeyAssignment) -> Option<Comm
             menubar: &[],
             icon: Some("md_expand"),
         },
+        ClaudeSwitchModel => CommandDef {
+            brief: "Switch Claude model".into(),
+            doc: "Opens a picker to select a Claude model (Sonnet, Opus, Haiku)".into(),
+            keys: vec![],
+            args: &[],
+            menubar: &[],
+            icon: Some("md_swap_horiz"),
+        },
+        ClaudeShowCost => CommandDef {
+            brief: "Show Claude cost".into(),
+            doc: "Displays the current Claude session cost and token usage".into(),
+            keys: vec![],
+            args: &[],
+            menubar: &[],
+            icon: Some("md_attach_money"),
+        },
+        ClaudeSessionHistory => CommandDef {
+            brief: "Claude session history".into(),
+            doc: "Opens a prompt to resume a previous Claude session by ID".into(),
+            keys: vec![],
+            args: &[],
+            menubar: &[],
+            icon: Some("md_history"),
+        },
+        ClaudeQuickPaste => CommandDef {
+            brief: "Claude quick paste with context".into(),
+            doc: "Pastes clipboard content wrapped in <context> tags for Claude".into(),
+            keys: vec![],
+            args: &[],
+            menubar: &[],
+            icon: Some("md_content_paste"),
+        },
+        ClaudeProjectSwitch => CommandDef {
+            brief: "Switch Claude project".into(),
+            doc: "Opens a picker to switch to a different Claude project directory".into(),
+            keys: vec![],
+            args: &[],
+            menubar: &[],
+            icon: Some("md_folder_open"),
+        },
         SendKey(key) => CommandDef {
             brief: format!(
                 "Sends {key:?} to the active pane, \

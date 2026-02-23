@@ -653,6 +653,11 @@ pub enum KeyAssignment {
     ClaudeNewConversation,
     ClaudeCompactMode,
     ClaudeVerboseMode,
+    ClaudeSwitchModel,
+    ClaudeShowCost,
+    ClaudeSessionHistory,
+    ClaudeQuickPaste,
+    ClaudeProjectSwitch,
 }
 impl_lua_conversion_dynamic!(KeyAssignment);
 

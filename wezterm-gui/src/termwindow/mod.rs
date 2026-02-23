@@ -2749,6 +2749,86 @@ impl TermWindow {
             ClaudeNewConversation => pane.writer().write_all(b"/clear\r")?,
             ClaudeCompactMode => pane.writer().write_all(b"/compact\r")?,
             ClaudeVerboseMode => pane.writer().write_all(b"/verbose\r")?,
+            ClaudeSwitchModel => {
+                let mux = Mux::get();
+                let tab = match mux.get_active_tab_for_window(self.mux_window_id) {
+                    Some(tab) => tab,
+                    None => return Ok(PerformAssignmentResult::Handled),
+                };
+                let target_pane = match self.get_active_pane_no_overlay() {
+                    Some(p) => p,
+                    None => return Ok(PerformAssignmentResult::Handled),
+                };
+                let target_pane_id = target_pane.pane_id();
+                let (overlay, future) = start_overlay(self, &tab, move |_tab_id, term| {
+                    crate::overlay::claude_model_picker::claude_model_picker(term)
+                });
+                self.assign_overlay(tab.tab_id(), overlay);
+                promise::spawn::spawn(async move {
+                    if let Ok(Some(cmd)) = future.await {
+                        let mux = Mux::get();
+                        if let Some(pane) = mux.get_pane(target_pane_id) {
+                            pane.writer().write_all(cmd.as_bytes()).ok();
+                        }
+                    }
+                })
+                .detach();
+            }
+            ClaudeSessionHistory => {
+                let mux = Mux::get();
+                let tab = match mux.get_active_tab_for_window(self.mux_window_id) {
+                    Some(tab) => tab,
+                    None => return Ok(PerformAssignmentResult::Handled),
+                };
+                let target_pane = match self.get_active_pane_no_overlay() {
+                    Some(p) => p,
+                    None => return Ok(PerformAssignmentResult::Handled),
+                };
+                let target_pane_id = target_pane.pane_id();
+                let (overlay, future) = start_overlay(self, &tab, move |_tab_id, term| {
+                    crate::overlay::claude_session_history::claude_session_history(term)
+                });
+                self.assign_overlay(tab.tab_id(), overlay);
+                promise::spawn::spawn(async move {
+                    if let Ok(Some(cmd)) = future.await {
+                        let mux = Mux::get();
+                        if let Some(pane) = mux.get_pane(target_pane_id) {
+                            pane.writer().write_all(cmd.as_bytes()).ok();
+                        }
+                    }
+                })
+                .detach();
+            }
+            ClaudeQuickPaste => {
+                let pane_id = pane.pane_id();
+                if let Some(window) = self.window.as_ref() {
+                    let window = window.clone();
+                    let future = window.get_clipboard(Clipboard::Clipboard);
+                    promise::spawn::spawn(async move {
+                        if let Ok(clip) = future.await {
+                            window.notify(TermWindowNotif::Apply(Box::new(
+                                move |_myself| {
+                                    let mux = Mux::get();
+                                    if let Some(pane) = mux.get_pane(pane_id) {
+                                        let wrapped =
+                                            format!("<context>\n{}\n</context>", clip);
+                                        pane.writer()
+                                            .write_all(wrapped.as_bytes())
+                                            .ok();
+                                    }
+                                },
+                            )));
+                        }
+                    })
+                    .detach();
+                }
+            }
+            ClaudeShowCost => {
+                log::info!("ClaudeShowCost: not yet implemented");
+            }
+            ClaudeProjectSwitch => {
+                log::info!("ClaudeProjectSwitch: not yet implemented");
+            }
             SendKey(key) => {
                 use keyevent::Key;
                 let mods = key.mods;
