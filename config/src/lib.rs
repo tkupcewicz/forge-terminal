@@ -389,6 +389,11 @@ fn xdg_config_home() -> PathBuf {
     }
 }
 
+/// Public accessor for the Forge config directory (e.g. `~/.config/forge/`).
+pub fn forge_config_dir() -> PathBuf {
+    xdg_config_home()
+}
+
 fn config_dirs() -> Vec<PathBuf> {
     let mut dirs = Vec::new();
     dirs.push(xdg_config_home());
