@@ -12,8 +12,22 @@ config.color_scheme = "Forge Dark"
 config.font_size = 14.0
 
 -- Window
-config.window_decorations = "RESIZE"
+config.window_decorations = "INTEGRATED_BUTTONS|RESIZE"
 config.window_padding = { left = 0, right = 12, top = 8, bottom = 8 }
+
+-- Window frame colors (matches Forge Dark scheme)
+config.window_frame = {
+    active_titlebar_bg = "#16162b",
+    inactive_titlebar_bg = "#16162b",
+    active_titlebar_fg = "#d4d4d4",
+    inactive_titlebar_fg = "#7c93c3",
+    button_fg = "#d4d4d4",
+    button_bg = "#16162b",
+    button_hover_fg = "#ffffff",
+    button_hover_bg = "#2b2b40",
+}
+
+config.integrated_title_button_style = "Windows"
 
 -- Side Panel (replaces horizontal tab bar)
 config.enable_side_panel = true
