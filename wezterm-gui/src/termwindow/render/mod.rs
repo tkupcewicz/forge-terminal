@@ -391,7 +391,14 @@ impl crate::TermWindow {
             VerticalWindowContentAlignment::Bottom => vertical_gap,
         };
 
-        (padding_left + left_gap, padding_top + top_gap)
+        // Add side panel offset to left padding so all pane content shifts right
+        let side_panel_offset = if self.show_side_panel {
+            self.side_panel_width
+        } else {
+            0.0
+        };
+
+        (padding_left + left_gap + side_panel_offset, padding_top + top_gap)
     }
 
     fn resolve_lock_glyph(

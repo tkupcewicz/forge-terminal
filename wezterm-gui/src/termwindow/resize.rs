@@ -247,9 +247,15 @@ impl super::TermWindow {
                 config.window_padding.bottom.evaluate_as_pixels(v_context) as usize;
             let padding_right = effective_right_padding(&config, h_context);
 
+            let side_panel_width = if self.show_side_panel {
+                self.side_panel_width as usize
+            } else {
+                0
+            };
             let avail_width = dimensions.pixel_width.saturating_sub(
                 (padding_left + padding_right) as usize
-                    + (border.left + border.right).get() as usize,
+                    + (border.left + border.right).get() as usize
+                    + side_panel_width,
             );
             let avail_height = dimensions
                 .pixel_height
