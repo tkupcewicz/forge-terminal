@@ -56,6 +56,10 @@ impl crate::TermWindow {
         self.fancy_tab_bar.take();
     }
 
+    pub fn invalidate_side_panel(&mut self) {
+        self.fancy_side_panel.take();
+    }
+
     pub fn build_fancy_tab_bar(&self, palette: &ColorPalette) -> anyhow::Result<ComputedElement> {
         let tab_bar_height = self.tab_bar_pixel_height()?;
         let font = self.fonts.title_font()?;

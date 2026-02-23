@@ -43,7 +43,10 @@ impl super::TermWindow {
             | UIItemType::AboveScrollThumb
             | UIItemType::BelowScrollThumb
             | UIItemType::ScrollThumb
-            | UIItemType::Split(_) => {}
+            | UIItemType::Split(_)
+            | UIItemType::SidePanelTab(_)
+            | UIItemType::SidePanelNewButton
+            | UIItemType::SidePanelDragHandle => {}
         }
     }
 
@@ -54,7 +57,10 @@ impl super::TermWindow {
             | UIItemType::AboveScrollThumb
             | UIItemType::BelowScrollThumb
             | UIItemType::ScrollThumb
-            | UIItemType::Split(_) => {}
+            | UIItemType::Split(_)
+            | UIItemType::SidePanelTab(_)
+            | UIItemType::SidePanelNewButton
+            | UIItemType::SidePanelDragHandle => {}
         }
     }
 
@@ -381,6 +387,11 @@ impl super::TermWindow {
             }
             UIItemType::CloseTab(idx) => {
                 self.mouse_event_close_tab(idx, event, context);
+            }
+            UIItemType::SidePanelTab(_)
+            | UIItemType::SidePanelNewButton
+            | UIItemType::SidePanelDragHandle => {
+                // Side panel mouse events handled in a later task
             }
         }
     }

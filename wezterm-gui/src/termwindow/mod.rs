@@ -159,6 +159,9 @@ pub enum UIItemType {
     ScrollThumb,
     BelowScrollThumb,
     Split(PositionedSplit),
+    SidePanelTab(usize),
+    SidePanelNewButton,
+    SidePanelDragHandle,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -391,6 +394,10 @@ pub struct TermWindow {
     show_scroll_bar: bool,
     tab_bar: TabBarState,
     fancy_tab_bar: Option<box_model::ComputedElement>,
+    show_side_panel: bool,
+    side_panel_width: f32,
+    fancy_side_panel: Option<box_model::ComputedElement>,
+    claude_tab_counter: usize,
     pub right_status: String,
     pub left_status: String,
     last_ui_item: Option<UIItem>,
@@ -712,6 +719,10 @@ impl TermWindow {
             show_scroll_bar: config.enable_scroll_bar,
             tab_bar: TabBarState::default(),
             fancy_tab_bar: None,
+            show_side_panel: config.enable_side_panel,
+            side_panel_width: config.side_panel_width,
+            fancy_side_panel: None,
+            claude_tab_counter: 0,
             right_status: String::new(),
             left_status: String::new(),
             last_mouse_coords: (0, -1),
