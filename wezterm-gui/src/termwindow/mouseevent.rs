@@ -46,7 +46,9 @@ impl super::TermWindow {
             | UIItemType::Split(_) => {}
             UIItemType::SidePanelTab(_)
             | UIItemType::SidePanelNewButton
-            | UIItemType::SidePanelDragHandle => {
+            | UIItemType::SidePanelDragHandle
+            | UIItemType::SidePanelHeader
+            | UIItemType::SidePanelWindowButton(_) => {
                 // Reset to default cursor when leaving side panel items
             }
         }
@@ -66,6 +68,11 @@ impl super::TermWindow {
                 }
             }
             UIItemType::SidePanelTab(_) | UIItemType::SidePanelNewButton => {
+                if let Some(window) = self.window.as_ref() {
+                    window.set_cursor(Some(MouseCursor::Arrow));
+                }
+            }
+            UIItemType::SidePanelHeader | UIItemType::SidePanelWindowButton(_) => {
                 if let Some(window) = self.window.as_ref() {
                     window.set_cursor(Some(MouseCursor::Arrow));
                 }
@@ -409,6 +416,12 @@ impl super::TermWindow {
             UIItemType::SidePanelDragHandle => {
                 self.mouse_event_side_panel_drag(item, event, context);
             }
+            UIItemType::SidePanelHeader => {
+                self.mouse_event_side_panel_header(event, context);
+            }
+            UIItemType::SidePanelWindowButton(button) => {
+                self.mouse_event_side_panel_window_button(button, event, context);
+            }
         }
     }
 
@@ -733,6 +746,70 @@ impl super::TermWindow {
         if event.kind == WMEK::Press(MousePress::Left) {
             self.dragging.replace((item, event));
         }
+    }
+
+    fn mouse_event_side_panel_header(
+        &mut self,
+        event: MouseEvent,
+        context: &dyn WindowOps,
+    ) {
+        match event.kind {
+            WMEK::Press(MousePress::Left) => {
+                let maximized = self
+                    .window_state
+                    .intersects(WindowState::MAXIMIZED | WindowState::FULL_SCREEN);
+                if let Some(ref window) = self.window {
+                    if self.config.window_decorations
+                        == WindowDecorations::INTEGRATED_BUTTONS | WindowDecorations::RESIZE
+                    {
+                        if self.last_mouse_click.as_ref().map(|c| c.streak) == Some(2) {
+                            if maximized {
+                                window.restore();
+                            } else {
+                                window.maximize();
+                            }
+                        }
+                    }
+                }
+                if !maximized {
+                    self.window_drag_position.replace(event.clone());
+                }
+                context.request_drag_move();
+            }
+            WMEK::Move => {
+                context.set_window_drag_position(event.screen_coords);
+            }
+            _ => {}
+        }
+        context.set_cursor(Some(MouseCursor::Arrow));
+    }
+
+    fn mouse_event_side_panel_window_button(
+        &mut self,
+        button: window::IntegratedTitleButton,
+        event: MouseEvent,
+        context: &dyn WindowOps,
+    ) {
+        if let WMEK::Press(MousePress::Left) = event.kind {
+            use window::IntegratedTitleButton as Button;
+            if let Some(ref window) = self.window {
+                match button {
+                    Button::Hide => window.hide(),
+                    Button::Maximize => {
+                        let maximized = self
+                            .window_state
+                            .intersects(WindowState::MAXIMIZED | WindowState::FULL_SCREEN);
+                        if maximized {
+                            window.restore();
+                        } else {
+                            window.maximize();
+                        }
+                    }
+                    Button::Close => self.close_requested(&window.clone()),
+                }
+            }
+        }
+        context.set_cursor(Some(MouseCursor::Arrow));
     }
 
     fn drag_side_panel(

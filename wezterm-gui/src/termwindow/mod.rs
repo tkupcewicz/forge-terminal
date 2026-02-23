@@ -162,6 +162,8 @@ pub enum UIItemType {
     SidePanelTab(usize),
     SidePanelNewButton,
     SidePanelDragHandle,
+    SidePanelHeader,
+    SidePanelWindowButton(IntegratedTitleButton),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
