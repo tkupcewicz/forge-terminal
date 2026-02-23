@@ -125,6 +125,7 @@ impl super::TermWindow {
             log::error!("recreate_texture_atlas: {:#}", err);
         }
         self.invalidate_fancy_tab_bar();
+        self.invalidate_side_panel();
         self.invalidate_modal();
     }
 
@@ -306,6 +307,7 @@ impl super::TermWindow {
         };
         self.resize_overlays();
         self.invalidate_fancy_tab_bar();
+        self.invalidate_side_panel();
         self.update_title();
 
         window.set_resize_increments(if self.config.use_resize_increments {

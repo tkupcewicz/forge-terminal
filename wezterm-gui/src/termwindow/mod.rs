@@ -1358,6 +1358,7 @@ impl TermWindow {
                 self.clear_all_overlays();
                 self.current_highlight.take();
                 self.invalidate_fancy_tab_bar();
+                self.invalidate_side_panel();
                 self.invalidate_modal();
 
                 let mux = Mux::get();
@@ -1811,6 +1812,7 @@ impl TermWindow {
             .update_config(&config);
         self.fancy_tab_bar.take();
         self.invalidate_fancy_tab_bar();
+        self.invalidate_side_panel();
         self.invalidate_modal();
         self.input_map = InputMap::new(&config);
         self.leader_is_down = None;
@@ -2026,6 +2028,7 @@ impl TermWindow {
         if new_tab_bar != self.tab_bar {
             self.tab_bar = new_tab_bar;
             self.invalidate_fancy_tab_bar();
+            self.invalidate_side_panel();
             self.invalidate_modal();
             if let Some(window) = self.window.as_ref() {
                 window.invalidate();
