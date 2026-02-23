@@ -1073,7 +1073,7 @@ impl Client {
                     }
 
                     let mut ui = ConnectionUI::new();
-                    ui.title("wezterm: Reconnecting...");
+                    ui.title("Forge: Reconnecting...");
 
                     loop {
                         ui.sleep_with_reason(
