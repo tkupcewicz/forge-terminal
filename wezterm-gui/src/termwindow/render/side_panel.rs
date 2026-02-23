@@ -84,6 +84,7 @@ impl crate::TermWindow {
             is_active: bool,
             title: String,
             model: Option<String>,
+            is_dead: bool,
         }
         let tab_infos: Vec<TabInfo> = {
             let mux = Mux::get();
@@ -93,6 +94,7 @@ impl crate::TermWindow {
                 for (idx, tab) in window.iter().enumerate() {
                     let is_active = idx == active_idx;
                     let title = tab.get_title();
+                    let is_dead = tab.is_dead();
                     let pane = tab.get_active_pane();
                     let session_info =
                         pane.as_ref().and_then(|p| p.claude_session_info());
@@ -102,6 +104,7 @@ impl crate::TermWindow {
                         is_active,
                         title,
                         model,
+                        is_dead,
                     });
                 }
             }
@@ -110,15 +113,42 @@ impl crate::TermWindow {
 
         // Build tab row elements from collected info
         for tab_info in &tab_infos {
-            let display_name = if tab_info.title.is_empty() {
-                format!("claude-{}", tab_info.idx + 1)
-            } else {
-                // Truncate long titles to fit the panel
-                let max_chars = 18;
-                if tab_info.title.len() > max_chars {
-                    format!("{}...", &tab_info.title[..max_chars - 3])
+            let display_name = {
+                let title_lower = tab_info.title.to_lowercase();
+                let is_shell_or_empty = tab_info.title.is_empty()
+                    || title_lower == "bash"
+                    || title_lower == "zsh"
+                    || title_lower == "fish"
+                    || title_lower == "sh"
+                    || title_lower.starts_with("bash ")
+                    || title_lower.starts_with("zsh ")
+                    || title_lower.starts_with("fish ");
+
+                let base_name = if is_shell_or_empty {
+                    format!("claude-{}", tab_info.idx + 1)
                 } else {
                     tab_info.title.clone()
+                };
+
+                // Append " (exited)" if the tab/pane is dead or title contains "exited"
+                let name_with_status = if tab_info.is_dead
+                    || title_lower.contains("exited")
+                {
+                    if !base_name.contains("(exited)") {
+                        format!("{} (exited)", base_name)
+                    } else {
+                        base_name
+                    }
+                } else {
+                    base_name
+                };
+
+                // Truncate to fit the panel
+                let max_chars = 18;
+                if name_with_status.len() > max_chars {
+                    format!("{}...", &name_with_status[..max_chars - 3])
+                } else {
+                    name_with_status
                 }
             };
 
