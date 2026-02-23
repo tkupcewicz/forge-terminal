@@ -470,6 +470,9 @@ pub struct TermWindow {
     gl: Option<Rc<glium::backend::Context>>,
     webgpu: Option<Rc<WebGpuState>>,
     config_subscription: Option<config::ConfigSubscription>,
+
+    /// Whether the onboarding wizard has already been checked/shown this session
+    onboarding_shown: bool,
 }
 
 impl TermWindow {
@@ -807,6 +810,7 @@ impl TermWindow {
             key_table_state: KeyTableState::default(),
             modal: RefCell::new(None),
             opengl_info: None,
+            onboarding_shown: false,
         };
 
         let tw = Rc::new(RefCell::new(myself));
@@ -2391,6 +2395,25 @@ impl TermWindow {
         });
         self.assign_overlay(tab.tab_id(), overlay);
         promise::spawn::spawn(future).detach();
+    }
+
+    fn show_onboarding_overlay(&mut self) {
+        let mux = Mux::get();
+        let tab = match mux.get_active_tab_for_window(self.mux_window_id) {
+            Some(tab) => tab,
+            None => return,
+        };
+
+        let (overlay, future) = start_overlay(self, &tab, move |_tab_id, term| {
+            crate::overlay::onboarding::run_onboarding(term)
+        });
+        self.assign_overlay(tab.tab_id(), overlay);
+        promise::spawn::spawn(async move {
+            future.await.ok();
+            // Reload config after onboarding generates forge.lua
+            config::reload();
+        })
+        .detach();
     }
 
     fn show_tab_navigator(&mut self) {

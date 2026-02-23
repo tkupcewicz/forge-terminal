@@ -15,6 +15,14 @@ pub enum AllowImage {
 
 impl crate::TermWindow {
     pub fn paint_impl(&mut self, frame: &mut RenderFrame) {
+        // Trigger onboarding on first paint if no forge.lua config exists
+        if !self.onboarding_shown {
+            self.onboarding_shown = true;
+            if crate::overlay::onboarding::should_run_onboarding() {
+                self.show_onboarding_overlay();
+            }
+        }
+
         self.num_frames += 1;
         // If nothing on screen needs animating, then we can avoid
         // invalidating as frequently
