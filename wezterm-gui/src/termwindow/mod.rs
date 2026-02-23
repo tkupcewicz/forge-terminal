@@ -2744,6 +2744,11 @@ impl TermWindow {
                 self.activate_window_relative(*n, false)?;
             }
             SendString(s) => pane.writer().write_all(s.as_bytes())?,
+            ClaudeAccept => pane.writer().write_all(b"y\r")?,
+            ClaudeReject => pane.writer().write_all(b"n\r")?,
+            ClaudeNewConversation => pane.writer().write_all(b"/clear\r")?,
+            ClaudeCompactMode => pane.writer().write_all(b"/compact\r")?,
+            ClaudeVerboseMode => pane.writer().write_all(b"/verbose\r")?,
             SendKey(key) => {
                 use keyevent::Key;
                 let mods = key.mods;

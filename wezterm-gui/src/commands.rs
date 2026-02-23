@@ -1720,6 +1720,46 @@ pub fn derive_command_from_key_assignment(action: &KeyAssignment) -> Option<Comm
             menubar: &[],
             icon: Some("md_keyboard_variant"),
         },
+        ClaudeAccept => CommandDef {
+            brief: "Accept Claude tool use".into(),
+            doc: "Sends 'y' + Enter to accept a Claude Code tool use request".into(),
+            keys: vec![],
+            args: &[],
+            menubar: &[],
+            icon: Some("md_check"),
+        },
+        ClaudeReject => CommandDef {
+            brief: "Reject Claude tool use".into(),
+            doc: "Sends 'n' + Enter to reject a Claude Code tool use request".into(),
+            keys: vec![],
+            args: &[],
+            menubar: &[],
+            icon: Some("md_close"),
+        },
+        ClaudeNewConversation => CommandDef {
+            brief: "New Claude conversation".into(),
+            doc: "Sends /clear to start a new Claude Code conversation".into(),
+            keys: vec![],
+            args: &[],
+            menubar: &[],
+            icon: Some("md_add_comment"),
+        },
+        ClaudeCompactMode => CommandDef {
+            brief: "Claude compact mode".into(),
+            doc: "Sends /compact to switch Claude Code to compact output".into(),
+            keys: vec![],
+            args: &[],
+            menubar: &[],
+            icon: Some("md_compress"),
+        },
+        ClaudeVerboseMode => CommandDef {
+            brief: "Claude verbose mode".into(),
+            doc: "Sends /verbose to switch Claude Code to verbose output".into(),
+            keys: vec![],
+            args: &[],
+            menubar: &[],
+            icon: Some("md_expand"),
+        },
         SendKey(key) => CommandDef {
             brief: format!(
                 "Sends {key:?} to the active pane, \
