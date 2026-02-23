@@ -1393,6 +1393,11 @@ impl Config {
         cfg.load_color_schemes(&cfg.compute_color_scheme_dirs())
             .ok();
 
+        // Default to Forge Dark if no color scheme was specified by the user
+        if cfg.color_scheme.is_none() {
+            cfg.color_scheme = Some("Forge Dark".to_string());
+        }
+
         if let Some(scheme) = cfg.color_scheme.as_ref() {
             match cfg.resolve_color_scheme() {
                 None => {
