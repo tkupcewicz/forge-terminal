@@ -506,6 +506,34 @@ pub struct Config {
     #[dynamic(default)]
     pub hide_tab_bar_if_only_one_tab: bool,
 
+    // -- Forge: Side Panel --
+
+    /// If true, display a vertical side panel on the left showing tabs
+    #[dynamic(default = "default_true")]
+    pub enable_side_panel: bool,
+
+    /// Width of the side panel in pixels
+    #[dynamic(default = "default_side_panel_width")]
+    pub side_panel_width: f32,
+
+    /// Minimum side panel width when dragging
+    #[dynamic(default = "default_side_panel_min_width")]
+    pub side_panel_min_width: f32,
+
+    /// Maximum side panel width when dragging
+    #[dynamic(default = "default_side_panel_max_width")]
+    pub side_panel_max_width: f32,
+
+    // -- Forge: Claude Session --
+
+    /// Default directory for new Claude sessions
+    #[dynamic(default)]
+    pub default_project_dir: Option<String>,
+
+    /// Path to the claude CLI binary (defaults to "claude" on PATH)
+    #[dynamic(default = "default_claude_command")]
+    pub claude_command: String,
+
     #[dynamic(default)]
     pub enable_scroll_bar: bool,
 
@@ -1883,6 +1911,22 @@ fn default_enq_answerback() -> String {
 
 fn default_tab_max_width() -> usize {
     16
+}
+
+fn default_side_panel_width() -> f32 {
+    200.0
+}
+
+fn default_side_panel_min_width() -> f32 {
+    120.0
+}
+
+fn default_side_panel_max_width() -> f32 {
+    400.0
+}
+
+fn default_claude_command() -> String {
+    "claude".to_string()
 }
 
 fn default_update_interval() -> u64 {
