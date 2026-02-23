@@ -13,10 +13,16 @@ config.font_size = 14.0
 
 -- Window
 config.window_decorations = "RESIZE"
-config.window_padding = { left = 12, right = 12, top = 8, bottom = 8 }
-config.enable_tab_bar = true
-config.use_fancy_tab_bar = true
-config.tab_bar_at_bottom = true
+config.window_padding = { left = 0, right = 12, top = 8, bottom = 8 }
+
+-- Side Panel (replaces horizontal tab bar)
+config.enable_side_panel = true
+config.side_panel_width = 200
+config.enable_tab_bar = false
+
+-- Claude Sessions
+-- config.default_project_dir = "~/projects/my-app"  -- Set during onboarding
+config.claude_command = "claude"
 
 -- Scrollback
 config.scrollback_lines = 50000

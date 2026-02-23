@@ -1426,6 +1426,11 @@ impl Config {
             cfg.color_scheme = Some("Forge Dark".to_string());
         }
 
+        // When side panel is enabled, suppress the horizontal tab bar
+        if cfg.enable_side_panel {
+            cfg.enable_tab_bar = false;
+        }
+
         if let Some(scheme) = cfg.color_scheme.as_ref() {
             match cfg.resolve_color_scheme() {
                 None => {
