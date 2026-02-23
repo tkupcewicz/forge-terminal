@@ -23,7 +23,7 @@ mod cli;
 
 #[derive(Debug, Parser)]
 #[command(
-    about = "Wez's Terminal Emulator\nhttp://github.com/wezterm/wezterm",
+    about = "Forge Terminal\nhttps://github.com/nickel-org/forge-terminal",
     version = wezterm_version()
 )]
 pub struct Opt {
@@ -772,9 +772,9 @@ fn delegate_to_gui(saver: UmaskSaver) -> anyhow::Result<()> {
     drop(saver);
 
     let exe_name = if cfg!(windows) {
-        "wezterm-gui.exe"
+        "forge-gui.exe"
     } else {
-        "wezterm-gui"
+        "forge-gui"
     };
 
     let exe = std::env::current_exe()?
